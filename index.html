@@ -1,86 +1,120 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Exploration 1</title>
-
-<!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-<!-- Latest compiled and minified JavaScript -->
+<link rel="stylesheet" type="text/css" href="pe">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<link rel="stylesheet" type="text/css" href="main.css">
+<!-- Including CSS & jQuery Dialog UI Here-->
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>	
+	<title>People's  Pets</title>
 </head>
 <body>
-	<h1>Exploration 1</h1>
-	<ul class = "nav nav-tabs ">
-		<li role = "presentation" class= "active"><a href="index.html">Description/Documentation</a></li>
-		<li role= "presentation"> <a href="code.html">Code</a></li>
-	</ul>
+	<div class="panel panel-default">
+		<div class="panel-heading">A Big List of Pets and How Much They Cost</div>
+		<div class="panel-body">
+			<p>
+			This is a big list of pets and how much they cost to upkeep. You may add your pet as well.
+			</p>
+			<center>
+				<div id = "createForm">
+  					<form method="POST" action = "<?= $_SERVER['PHP_SELF'] ?>">
+  						 <input type = "text" id = "type" placeholder='Type of Pet' name="typePet">
+   						 <input type = "text" id = "price" placeholder = "Cost of Pet" name = "cost">
+   						 <input type ="submit" id = "submit" name="submit"class="btn-success" value="Add Pet">
+  					</form>
+ 				</div>
+			</center>
+		</div>
+		<table class="table table-striped" id="mainTable">
+			<th>ID #</th>
+			<th>Type</th>
+			<th>Price</th>
+			<tbody>
+			<?php populateTable();?>
+		    </tbody>
+		</table>
+	</div>
 
-	<img class="center-block" src="http://stormpath.com/wp-content/uploads/2016/06/vapor-logo-1.jpg">
-    <p class="lead text-center">Vapor: Exploring Server Side Scripting with Swift</p>
+<?php
+	class Pets {
+		public $id;
+		public $type ="";
+		public $price;
 
-    <p>
-    	For this exploration I wanted to explore one of the newest languages in the field; Swift. Swift has been out for a couple years now and only just recently has it become open source. This means many new and interesting projects are being implemented for the language outside of iOS development. This includes using Swift as a server-side language. Swift has been praised for its speed over many other languages, which is a benefit when you have a web application sending and requesting several packets over the wire. 
-    </p>
-    	<img class="center-block" src="http://i.stack.imgur.com/wcdXk.jpg">
-    	<figcaption>http://i.stack.imgur.com/wcdXk.jpg</figcaption>
+	}
+     $pets = new Pets();
+	function getAllPets(){	
+    	$curl = curl_init();
 
-	<p>
-		Vapor is the new attempt at a web framework for Swift which was only released officially a couple of days ago. Already, in a speed test to see how many JSON requests it can process in a second, Vapor comes in third in front of several popular frameworks used today.
-	</p>
-		<img class="center-block" src="https://cdn-images-1.medium.com/max/2000/1*cbd4p0pGV50rI54kIYwSNA.png">
-		<figcaption>https://cdn-images-1.medium.com/max/2000/1*cbd4p0pGV50rI54kIYwSNA.png</figcaption>
-	<p>
-		So I decided “Why not take a stab at it?”. To preface, I have very little experience with Swift and any experience I had was too long ago to really even remember. Also, since this framework is so new, there is basically no help on StackOverflow what-so-ever. PLUS any tutorials online where written when Vapor was in beta, so much has changed in the framework syntactically from beta to release that those also weren’t much help. Not to mention dependency issues as well. SO I was sort of on my own…. ANYWAYS rant over.
-	</p>
-	<p>
-		Setting up Vapor could not have been easier, the only requirements are to have Xcode 8 installed and the latest version of Swift (Swift 3). After that you just type in <code> vapor new [project_name] </code> and Vapor will set everything up for you. The folder structure is a standard MVC set-up (Controllers in the Controllers folder, Models in the Models, etc.). 
+    	curl_setopt($curl, CURLOPT_URL, "https://712x9uf0jk.execute-api.us-west-2.amazonaws.com/prod/pets/");
+    	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
-		The main piece of the framework is a Class called the Droplet. The Documentation states:
-		<blockquote>
-			<em>"The Droplet is a service container that gives you access to many of Vapor's facilities. It is responsible for registering routes, starting the server, appending middleware, and more."</em>
-		</blockquote>
-	</p>
-	<p>
-		You can think of this class mainly as the conductor, routing you to the correct place, retrieving data, etc. Take this Hello World example:
-		<pre>
-		drop.get("hello") { request in
-    			return "Welcome"
+    	$result = curl_exec($curl);
+    	return $result;
+    	curl_close($curl);
+	}
+
+	function postPet($pets) {
+		$curl = curl_init();
+		
+		$petString="{\"pets\": [ \n";
+		foreach ($pets as $pet) {
+			if(end($pets) == $pet){
+				$petString .= "{\"id\": $pet->id, \"type\": \"$pet->type\", \"price\": $pet->price}";
+			}else{
+				$petString .= "{\"id\": $pet->id, \"type\": \"$pet->type\", \"price\": $pet->price},\n";
+			}
 		}
-		</pre>
-	</p>
-	<p>Here when the url “project.com/hello” is called, the String “Welcome” will be returned to your screen. 
-	</p>
-	<p>
-		Once I began getting my feet wet playing with this Droplet. I wrote a couple functions that were similar in nature. They were:
-		<ul>
-			<li>Output a JSON Object to the User</li>
-			<li>Retrieve A JSON Document from the Web (wikipedia) and output it to the user</li>
-			<li>Rout the user to make google search on their name</li>
-			<li>Re-rout the user to a different view</li>
-		</ul>
-	</p>
-	<p>
-		All in all it was a great first experience with Vapor. As the project sits now, there is a bit of a steep learning curve if you are coming to it with little or no experience with Swift (go figure). But as the popularity of this language keeps increasing, it is not unlikely that you will see more applications being developed with this framework. Additionally, the existence of a project like this only motivates me more to learn and work with Swift more often. 
-	</p>
-    <p class="lead text-center">Sources</p>
-    <ul>
-    	<li><a href="https://vapor.github.io/documentation/">https://vapor.github.io/documentation/</a></li>
-    	<li><a href="https://vapor.github.io/documentation/guide/views.html">https://vapor.github.io/documentation/guide/views.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/guide/json.html">https://vapor.github.io/documentation/guide/json.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/http/request.html">https://vapor.github.io/documentation/http/request.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/guide/droplet.html">https://vapor.github.io/documentation/guide/droplet.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/getting-started/hello-world.html">https://vapor.github.io/documentation/getting-started/hello-world.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/routing/parameters.html">https://vapor.github.io/documentation/routing/parameters.html</a></li>
-    	<li><a href="https://vapor.github.io/documentation/http/client.html">https://vapor.github.io/documentation/http/client.html</a></li>
-    </ul>
+		$petString.= "]\n}";
 
+		curl_setopt_array($curl, array(
+  		CURLOPT_URL => "https://712x9uf0jk.execute-api.us-west-2.amazonaws.com/prod/pets/",
+  		CURLOPT_RETURNTRANSFER => true,
+  		CURLOPT_ENCODING => "",
+  		CURLOPT_MAXREDIRS => 10,
+  		CURLOPT_TIMEOUT => 30,
+  		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  		CURLOPT_CUSTOMREQUEST => "POST",
+  		CURLOPT_POSTFIELDS => $petString
+		));
 
+    	$result = curl_exec($curl);
+
+    	curl_close($curl);
+	 }
+
+	function populateTable() {
+		$pets = json_decode(getAllPets());
+		foreach($pets as $pet) {
+			# code...
+		echo("	
+			<tr>
+				<td>$pet->id </td>
+				<td>$pet->type </td>
+				<td>$pet->price </td>
+			</tr>
+  		");
+		}
+
+	}
+	if(isset($_POST['submit'])) {
+		$pets = json_decode(getAllPets());
+		$newPet = new Pets();
+		$newPet->id = (end($pets)->id) + 1;
+		$newPet->type=$_POST['typePet'];
+		$newPet->price=$_POST['cost'];
+		$pets[] = $newPet;
+		?>
+	 	<script type="text/javascript"> 
+		$('#mainTable').append('<tr><td><?php echo($newPet->id)?></td><td><?php echo($newPet->type)?></td><td><?php echo($newPet->price)?></td></tr>');
+	 	</script><?php
+	 	postPet($pets);
+	}
+?>
 
 </body>
 </html>
